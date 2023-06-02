@@ -1,8 +1,12 @@
 import logging
+import queue
+import threading
 from typing import Any
 
-import requests
+from fastapi.responses import JSONResponse
 from fastapi import HTTPException, status
+
+from clients import google_books, books_open_library, books_library_of_congress
 
 from configs.database import create_session
 from repositories.library import (
@@ -51,41 +55,42 @@ def get_books_db(search_term: str):
                         "image": book.image,
                     }
                 )
-            return list_book
+            data = {"source": "database", "data": list_book}
+            return data
 
         else:
-            # Buscar en el API de Google Books
-            api_key = "TU_CLAVE_DE_API_DE_GOOGLE"
-            url = f"https://www.googleapis.com/books/v1/volumes?q={search_term}&key={api_key}"
+            threads = []
+            result = queue.Queue()
+            open_library_thread = threading.Thread(
+                target=books_open_library.search_books_open_library,
+                args=(search_term, result),
+                daemon=True,
+            )
+            threads.append(open_library_thread)
 
-            response = requests.get(url)
-            if response.status_code == 200:
-                data = response.json()
+            library_of_congress_thread = threading.Thread(
+                target=books_library_of_congress.search_books_library_of_congress,
+                args=(search_term, result),
+                daemon=True,
+            )
+            threads.append(library_of_congress_thread)
 
-                # Procesar los resultados del API de Google Books
-                books = data.get("items", [])
-                response = []
-                for book in books:
-                    book_info = book.get("volumeInfo", {})
-                    response.append(
-                        {
-                            "title": book_info.get("title", ""),
-                            "subtitle": book_info.get("subtitle", ""),
-                            "authors": book_info.get("authors", []),
-                            "categories": book_info.get("categories", []),
-                            "editor": book_info.get("publisher", ""),
-                            "description": book_info.get("description", ""),
-                            "image": book_info["imageLinks"].get("thumbnail", "")
-                            if "imageLinks" in book_info
-                            else "",
-                        }
-                    )
-                return response
+            google_books_thread = threading.Thread(
+                target=google_books.search_books_in_google_api,
+                args=(search_term, result),
+                daemon=True,
+            )
+            threads.append(google_books_thread)
 
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=NotItem
-                )
+            value_data = []
+            for star in threads:
+                star.start()
+                value_data.append(result.get())
+                star.join(timeout=0.2)
+                result.task_done()
+
+            return value_data
+
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"error {method}")
@@ -114,13 +119,13 @@ def single_book(
             get_single_book = get_single_book_id(db, id)
 
         elif authors:
-            get_single_book = get_book_authors(authors)
+            get_single_book = get_book_authors(db, authors)
 
         elif categories:
-            get_single_book = get_book_categories(categories)
+            get_single_book = get_book_categories(db, categories)
 
         elif title:
-            get_single_book = get_book_title(title)
+            get_single_book = get_book_title(db, title)
 
         if not get_single_book:
             raise HTTPException(
@@ -184,8 +189,8 @@ def update_silgle_book(id: int, obj_updater: UpdateLibrary):
         db.close()
 
 
-def delete_single_book_(id: int):
-    method = delete_single_book_.__name__
+def delete_single_book(id: int):
+    method = delete_single_book.__name__
 
     """
     Delete a single user record in the database

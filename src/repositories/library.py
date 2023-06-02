@@ -1,27 +1,28 @@
-from datetime import datetime
 from typing import Any
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import or_
 
+from configs.database import create_session
 from models import library
 from schemas.library import LibraryRegistry
 
 
 def get_book(db: Session, search_term: str):
     try:
-        return (
-            db.query(library.Library)
-            .filter(
-                library.Library.title.ilike(f"%{search_term}%"),
-                library.Library.subtitle.ilike(f"%{search_term}%"),
-                library.Library.authors.ilike(f"%{search_term}%"),
-                library.Library.categories.ilike(f"%{search_term}%"),
-                library.Library.editor.ilike(f"%{search_term}%"),
-                library.Library.description.ilike(f"%{search_term}%"),
+
+        query = db.query(library.Library).filter(
+            or_(
+                func.lower(library.Library.title).like(func.lower(f'%{search_term}%')),
+                func.lower(library.Library.authors).like(func.lower(f'%{search_term}%')),
+                func.lower(library.Library.categories).like(func.lower(f'%{search_term}%')),
+                func.lower(library.Library.editor).like(func.lower(f'%{search_term}%'))
             )
-            .all()
-        )
+        ).all()
+
+        return query
 
     except Exception as ex:
         db.close()
@@ -68,7 +69,7 @@ def get_book_title(db: Session, title: str):
     try:
         book_title = (
             db.query(library.Library)
-            .filter(library.Library.book_title == title)
+            .filter(library.Library.title == title)
             .first()
         )
         return book_title
@@ -78,13 +79,19 @@ def get_book_title(db: Session, title: str):
         raise ex
 
 
+def create_book_for_consult(data_list: list):
+    db = create_session()
+    for book in data_list:
+        book_exists = get_book_title(db=db, title=book.get("title"))
+        if not book_exists:
+            create_book(db=db, obj_in=book)
+
 # POST
 def create_book(db: Session, *, obj_in: LibraryRegistry):
     try:
         obj_in_data: Any = jsonable_encoder(obj_in)
         db_obj = library.Library(**obj_in_data)
-        db_obj.load_date = datetime.utcnow()
-        db_obj.update_date = datetime.utcnow()
+
 
         db.add(db_obj)
         db.commit()

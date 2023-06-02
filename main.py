@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from controllers import users, registry
+from controllers import users, registry, library
 from settings import Settings
 
 settings = Settings()
@@ -15,6 +15,7 @@ app = FastAPI(
 # routers users
 app.include_router(users.user_router)
 app.include_router(registry.registry_router)
+app.include_router(library.book_router)
 
 
 if __name__ == "__main__":

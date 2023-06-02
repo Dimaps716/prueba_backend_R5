@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, Union
 
 from pydantic import BaseModel, EmailStr, Field
@@ -16,7 +16,7 @@ class LibraryBase(BaseModel):
     categories: Optional[str] = Field(
         ...,
     )
-    publication_date: Union[datetime, None] = Field(default=datetime.utcnow())
+    publication_date: Union[date, None] = Field(default=date)
     editor: Optional[str] = Field(
         ...,
     )

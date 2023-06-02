@@ -4,14 +4,14 @@ CREATE SCHEMA IF NOT EXISTS library;
 -- Creación de la tabla
 CREATE TABLE IF NOT EXISTS library.library (
         id SERIAL PRIMARY KEY,
-        titulo TEXT,
-        subtitulo TEXT,
-        autores TEXT,
-        categorias TEXT,
-        fecha_publicacion DATE,
+        title TEXT,
+        subtitle TEXT,
+        authors TEXT,
+        categories TEXT,
+        publication_date TIMESTAMP,
         editor TEXT,
-        descripcion TEXT,
-        imagen TEXT
+        description TEXT,
+        image TEXT
     );
 
 
