@@ -6,7 +6,6 @@ from services import register
 registry_router = APIRouter(prefix="/registry", tags=["Registry"])
 
 
-
 @registry_router.get(
     "/all/{first_name}",
     status_code=status.HTTP_200_OK,

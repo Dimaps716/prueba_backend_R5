@@ -1,4 +1,14 @@
-from sqlalchemy import (ARRAY, Boolean, Column, Integer, JSON, Numeric, String, TIMESTAMP, Text)
+from sqlalchemy import (
+    ARRAY,
+    Boolean,
+    Column,
+    Integer,
+    JSON,
+    Numeric,
+    String,
+    TIMESTAMP,
+    Text,
+)
 
 from configs.database import Base
 

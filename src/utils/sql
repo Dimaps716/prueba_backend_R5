@@ -1,26 +1,21 @@
--- Creación del esquema
-CREATE SCHEMA IF NOT EXISTS products;
+-- Creación del squema
+CREATE SCHEMA IF NOT EXISTS library;
 
 -- Creación de la tabla
-CREATE TABLE IF NOT EXISTS products.products (
-id SERIAL,
-product_id VARCHAR(70) PRIMARY KEY,
-name VARCHAR(150),
-category VARCHAR(150),
-original_price NUMERIC,
-new_price NUMERIC,
-percentage_discount NUMERIC,
-description TEXT,
-length JSON[],
-image_link TEXT,
-offer_expiration_date TIMESTAMP,
-update_date TIMESTAMP,
-load_date TIMESTAMP,
-create_date TIMESTAMP
-);
+CREATE TABLE IF NOT EXISTS library.library (
+        id SERIAL PRIMARY KEY,
+        titulo TEXT,
+        subtitulo TEXT,
+        autores TEXT,
+        categorias TEXT,
+        fecha_publicacion DATE,
+        editor TEXT,
+        descripcion TEXT,
+        imagen TEXT
+    );
 
 
--- Creación del esquema
+-- Creación del squema
 CREATE SCHEMA IF NOT EXISTS users_registration;
 
 -- Creación de la tabla
@@ -35,7 +30,7 @@ create_date TIMESTAMP,
 load_date TIMESTAMP
 );
 
--- Creación del esquema
+-- Creación del squema
 CREATE SCHEMA IF NOT EXISTS users;
 
 -- Creación de la tabla
@@ -57,57 +52,3 @@ address JSON[],
 update_date TIMESTAMP,
 create_date TIMESTAMP
 );
-
-
--- Creación del esquema
-CREATE SCHEMA IF NOT EXISTS history_orders;
-
--- Creación de la tabla
-CREATE TABLE IF NOT EXISTS history_orders.historical_orders (
-id SERIAL PRIMARY KEY,
-user_id VARCHAR(65),
-orders_id VARCHAR(65),
-created_date TIMESTAMP
-);
-
--- Creación del esquema
-CREATE SCHEMA IF NOT EXISTS orders;
-
--- Creación de la tabla
-CREATE TABLE IF NOT EXISTS orders.orders (
-id SERIAL ,
-order_id VARCHAR(70) PRIMARY KEY,
-user_id VARCHAR(70),
-destination_address JSON[],
-delivery_date TIMESTAMP,
-status VARCHAR(150),
-product_id VARCHAR(70),
-update_date TIMESTAMP,
-load_date TIMESTAMP,
-create_date TIMESTAMP
-);
-
-
--- Creación de las claves foráneas
-ALTER TABLE history_orders.historical_orders
-ADD CONSTRAINT fk_user_id
-FOREIGN KEY (user_id)
-REFERENCES users.users(user_id);
-
-ALTER TABLE history_orders.historical_orders
-ADD CONSTRAINT fk_orders_id
-FOREIGN KEY (orders_id)
-REFERENCES orders.orders(order_id);
-
-
-
--- Creación de las claves foráneas
-ALTER TABLE orders.orders
-ADD CONSTRAINT fk_user_id
-FOREIGN KEY (user_id)
-REFERENCES users.users(user_id);
-
-ALTER TABLE orders.orders
-ADD CONSTRAINT fk_product_id
-FOREIGN KEY (product_id)
-REFERENCES products.products(product_id);
