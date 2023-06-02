@@ -6,14 +6,14 @@ from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 
-from core.database import create_session
-from crud.register import (
+from configs.database import create_session
+from repositories.register import (
     create_register,
     get_register_first_name,
     get_single_register_email,
     update_register_object,
 )
-from crud.user_master import create_user_master
+from repositories.user_master import create_user_master
 from enums.user_type import UserTypes
 from schemas.users.user_register import UpdateRegistry, UserRegistry
 

@@ -1,6 +1,6 @@
 from sqlalchemy import (ARRAY, Boolean, Column, Integer, JSON, Numeric, String, TIMESTAMP, Text)
 
-from core.database import Base
+from configs.database import Base
 
 
 class Users(Base):

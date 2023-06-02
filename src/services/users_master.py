@@ -3,8 +3,8 @@ from typing import Any
 
 from fastapi import HTTPException, status
 
-from core.database import create_session
-from crud.user_master import (
+from configs.database import create_session
+from repositories.user_master import (
     confirm_email_user,
     create_user_master,
     delete_user_master_object,

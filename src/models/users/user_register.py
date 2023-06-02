@@ -1,4 +1,4 @@
-from core.database import Base
+from configs.database import Base
 from sqlalchemy import TIMESTAMP, Column, Integer, String
 
 
