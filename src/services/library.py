@@ -115,28 +115,29 @@ def single_book(
     """
     try:
         db = create_session()
+        get_single_book = ""
 
         if id:
             get_single_book = get_single_book_id(db, id)
 
         elif authors:
-            get_single_book = get_book_authors(db, authors)
+            get_single_book = get_book_authors(db, authors.rstrip())
 
         elif categories:
-            get_single_book = get_book_categories(db, categories)
+            get_single_book = get_book_categories(db, categories.rstrip())
 
         elif title:
-            get_single_book = get_book_title(db, title)
+            get_single_book = get_book_title(db, title.rstrip())
 
         if not get_single_book:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="email not exits"
+                status_code=status.HTTP_404_NOT_FOUND, detail=method
             )
         return get_single_book
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail=f"error get users by email,{method}"
+            status.HTTP_404_NOT_FOUND, detail=f"{method}"
         )
     finally:
         db.close()
@@ -161,7 +162,7 @@ def create_book_library(form_in: LibraryRegistry) -> dict:
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail=f"error create form user, {method}"
+            status.HTTP_404_NOT_FOUND, detail={method}
         )
     finally:
         db.close()
@@ -184,7 +185,7 @@ def update_silgle_book(id: int, obj_updater: UpdateLibrary):
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail=f"error update user, {method}"
+            status.HTTP_404_NOT_FOUND, detail=method
         )
     finally:
         db.close()
@@ -208,7 +209,7 @@ def delete_single_book(id: int):
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(
-            status.HTTP_424_FAILED_DEPENDENCY, detail=f"error delete user, {method}"
+            status.HTTP_424_FAILED_DEPENDENCY, detail=f"error delete, {method}"
         )
     finally:
         db.close()

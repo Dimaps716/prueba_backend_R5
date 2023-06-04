@@ -53,7 +53,15 @@ def get_single_book_id(db: Session, id: int):
 def get_book_authors(db: Session, authors: str):
     try:
         book_authors = (
-            db.query(library.Library).filter(library.Library.authors == authors).first()
+            db.query(library.Library)
+            .filter(
+                or_(
+                    func.lower(library.Library.authors).like(
+                        func.lower(f"%{authors}%")
+                    )
+                )
+            )
+            .all()
         )
         return book_authors
 
@@ -66,8 +74,14 @@ def get_book_categories(db: Session, categories: str):
     try:
         book_categories = (
             db.query(library.Library)
-            .filter(library.Library.categories == categories)
-            .first()
+            .filter(
+                or_(
+                    func.lower(library.Library.categories).like(
+                        func.lower(f"%{categories}%")
+                    )
+                )
+            )
+            .all()
         )
         return book_categories
 
@@ -79,7 +93,15 @@ def get_book_categories(db: Session, categories: str):
 def get_book_title(db: Session, title: str):
     try:
         book_title = (
-            db.query(library.Library).filter(library.Library.title == title).first()
+            db.query(library.Library)
+            .filter(
+                or_(
+                    func.lower(library.Library.title).like(
+                        func.lower(f"%{title}%")
+                    )
+                )
+            )
+            .all()
         )
         return book_title
 
