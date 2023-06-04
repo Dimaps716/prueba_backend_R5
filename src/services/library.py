@@ -38,7 +38,7 @@ def get_books_db(search_term: str):
     try:
         db = create_session()
 
-        get_books = get_book(db, search_term)
+        get_books = get_book(db, search_term.rstrip())
         if get_books:
             # Devolver los resultados de la base de datos
             list_book = []
@@ -61,6 +61,14 @@ def get_books_db(search_term: str):
         else:
             threads = []
             result = queue.Queue()
+
+            google_books_thread = threading.Thread(
+                target=google_books.search_books_in_google_api,
+                args=(search_term, result),
+                daemon=True,
+            )
+            threads.append(google_books_thread)
+
             open_library_thread = threading.Thread(
                 target=books_open_library.search_books_open_library,
                 args=(search_term, result),
@@ -74,13 +82,6 @@ def get_books_db(search_term: str):
                 daemon=True,
             )
             threads.append(library_of_congress_thread)
-
-            google_books_thread = threading.Thread(
-                target=google_books.search_books_in_google_api,
-                args=(search_term, result),
-                daemon=True,
-            )
-            threads.append(google_books_thread)
 
             value_data = []
             for star in threads:
