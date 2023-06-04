@@ -34,7 +34,7 @@ def search_books_open_library(search_term, result):
                     if book.get("author_name") is not None
                     else None,
                     "categories": book.get("categories", ""),
-                    "editor": book.get("publisher", "")[0],
+                    "editor": book.get("publisher", "")[0] if book.get("publisher") is not None else None,
                     "publication_date": convert_date(
                         str(book.get("first_publish_year", ""))
                     ),
