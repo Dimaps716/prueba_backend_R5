@@ -8,10 +8,13 @@ from repositories.library import create_book, create_book_for_consult
 def convert_date(date_str):
     if date_str is None:
         return None
-    if len(date_str) == 4:  # Si la cadena tiene solo el año
-        return datetime.strptime(date_str, "%Y").date()
-    else:  # Si la cadena tiene el año, mes y día
-        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    if isinstance(date_str, int):  # If the input is a 4-digit year as an integer
+        date_str = str(date_str)
+    date_format = "%Y-%m-%d" if len(date_str) > 7 else "%Y-%m"
+    try:
+        return datetime.strptime(date_str, date_format).date()
+    except ValueError:
+        return None
 
 
 def search_books_in_google_api(search_term: str, result) -> list:
@@ -25,26 +28,26 @@ def search_books_in_google_api(search_term: str, result) -> list:
         books = data.get("items", [])
 
         response_data = []
-        for book in books:
-            book_info = book.get("volumeInfo", {})
+        for _ in range(10):
+            book = books[_].get("volumeInfo", {})
 
             response_data.append(
                 {
-                    "title": book_info.get("title", ""),
-                    "subtitle": book_info.get("subtitle", ""),
-                    "authors": book_info.get("authors", "")[0]
-                    if type(book_info.get("authors")) is list
-                    else book_info.get("authors", ""),
-                    "categories": book_info.get("categories", "")[0]
-                    if type(book_info.get("categories")) is list
-                    else book_info.get("categories", ""),
-                    "editor": book_info.get("publisher", ""),
+                    "title": book.get("title", ""),
+                    "subtitle": book.get("subtitle", ""),
+                    "authors": book.get("authors", "")[0]
+                    if type(book.get("authors")) is list
+                    else book.get("authors", ""),
+                    "categories": book.get("categories", "")[0]
+                    if type(book.get("categories")) is list
+                    else book.get("categories", ""),
+                    "editor": book.get("publisher", ""),
                     "publication_date": convert_date(
-                        book_info.get("publishedDate", "")
+                        book.get("publishedDate", "")
                     ),
-                    "description": book_info.get("description", ""),
-                    "image": book_info["imageLinks"].get("thumbnail", "")
-                    if "imageLinks" in book_info
+                    "description": book.get("description", ""),
+                    "image": book["imageLinks"].get("thumbnail", "")
+                    if "imageLinks" in book
                     else "",
                 }
             )
