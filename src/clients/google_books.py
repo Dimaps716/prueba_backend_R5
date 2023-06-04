@@ -42,9 +42,7 @@ def search_books_in_google_api(search_term: str, result) -> list:
                     if type(book.get("categories")) is list
                     else book.get("categories", ""),
                     "editor": book.get("publisher", ""),
-                    "publication_date": convert_date(
-                        book.get("publishedDate", "")
-                    ),
+                    "publication_date": convert_date(book.get("publishedDate", "")),
                     "description": book.get("description", ""),
                     "image": book["imageLinks"].get("thumbnail", "")
                     if "imageLinks" in book

@@ -14,6 +14,7 @@ def convert_date(date_str):
     except ValueError:
         return None
 
+
 def search_books_library_of_congress(search_term, result):
     url = f"https://www.loc.gov/books/?q={search_term}&fo=json"
     response = requests.get(url)
@@ -32,7 +33,9 @@ def search_books_library_of_congress(search_term, result):
                     "categories": book.get("partof", [])[0],
                     "editor": book.get("group", "")[0],
                     "publication_date": convert_date(str(book.get("date", ""))),
-                    "description": book.get("description", "")[0] if book.get("description") is not None else None,
+                    "description": book.get("description", "")[0]
+                    if book.get("description") is not None
+                    else None,
                     "image": book.get("image_url", "")[0],
                 }
             )
