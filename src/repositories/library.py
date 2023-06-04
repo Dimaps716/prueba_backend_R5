@@ -12,15 +12,26 @@ from schemas.library import LibraryRegistry
 
 def get_book(db: Session, search_term: str):
     try:
-
-        query = db.query(library.Library).filter(
-            or_(
-                func.lower(library.Library.title).like(func.lower(f'%{search_term}%')),
-                func.lower(library.Library.authors).like(func.lower(f'%{search_term}%')),
-                func.lower(library.Library.categories).like(func.lower(f'%{search_term}%')),
-                func.lower(library.Library.editor).like(func.lower(f'%{search_term}%'))
+        query = (
+            db.query(library.Library)
+            .filter(
+                or_(
+                    func.lower(library.Library.title).like(
+                        func.lower(f"%{search_term}%")
+                    ),
+                    func.lower(library.Library.authors).like(
+                        func.lower(f"%{search_term}%")
+                    ),
+                    func.lower(library.Library.categories).like(
+                        func.lower(f"%{search_term}%")
+                    ),
+                    func.lower(library.Library.editor).like(
+                        func.lower(f"%{search_term}%")
+                    ),
+                )
             )
-        ).all()
+            .all()
+        )
 
         return query
 
@@ -68,9 +79,7 @@ def get_book_categories(db: Session, categories: str):
 def get_book_title(db: Session, title: str):
     try:
         book_title = (
-            db.query(library.Library)
-            .filter(library.Library.title == title)
-            .first()
+            db.query(library.Library).filter(library.Library.title == title).first()
         )
         return book_title
 
@@ -86,12 +95,12 @@ def create_book_for_consult(data_list: list):
         if not book_exists:
             create_book(db=db, obj_in=book)
 
+
 # POST
 def create_book(db: Session, *, obj_in: LibraryRegistry):
     try:
         obj_in_data: Any = jsonable_encoder(obj_in)
         db_obj = library.Library(**obj_in_data)
-
 
         db.add(db_obj)
         db.commit()
