@@ -1,0 +1,64 @@
+name: Deploy CRM API DEV
+on:
+  push:
+    branches:
+      - develop
+  
+env:
+  SOLUTION_NAME: dev-gcr-r5-api
+  REGION: us-east1
+  PROJECT_ID: ""
+  IMAGE_NAME: ""
+  GCR_SA: ""
+
+jobs:
+  deploy-to-cloud-run:
+    name: DEV Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      # Setup Auth for GCP SDK
+      - name: "Auth GCP"
+        uses: "google-github-actions/auth@v0"
+        with:
+          credentials_json: ${{""}}
+
+      # Cloud SDK CLI setup
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      # Configure Docker with gcloud
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker
+
+      # Build the docker image via CloudBuild
+      - name: Build & Push Image
+        run: |
+          gcloud config set project ${{ env.PROJECT_ID }}
+          gcloud config set run/region us-east1
+          gcloud builds submit --tag ${{ env.IMAGE_NAME }}:latest
+
+      # Deploy to Cloud Run
+      - name: "Deploy to Cloud Run"
+        run: |
+          gcloud run deploy ${{ env.SOLUTION_NAME }} \
+            --image ${{ env.IMAGE_NAME }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --set-env-vars "MACHINE=GCP, \
+                            SCOPE=develop, \
+                            ALLOW_ORIGINS=['*'], \
+                            ALLOW_CREDENTIALS=True, \
+                            ALLOW_METHODS=['*'], \
+                            ALLOW_HEADERS=['*']" \
+            --set-secrets "DB_CONNECTION_NAME=connection_name:latest, \
+                          DB_NAME=db_name:latest, \
+                          DB_USERNAME=username:latest, \
+                          DB_PASS=password:latest, \
+                          DB_PORT=db_port:latest, \
+                          DB_HOST=db_host:latest" \
+            --service-account ${{ env.GCR_SA }}

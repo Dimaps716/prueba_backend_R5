@@ -1,0 +1,54 @@
+-- Creación del squema
+CREATE SCHEMA IF NOT EXISTS library;
+
+-- Creación de la tabla
+CREATE TABLE IF NOT EXISTS library.library (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        subtitle TEXT,
+        authors TEXT,
+        categories TEXT,
+        publication_date TIMESTAMP,
+        editor TEXT,
+        description TEXT,
+        image TEXT
+    );
+
+
+-- Creación del squema
+CREATE SCHEMA IF NOT EXISTS users_registration;
+
+-- Creación de la tabla
+CREATE TABLE IF NOT EXISTS users_registration.users_register (
+id SERIAL,
+first_name VARCHAR(25),
+last_name VARCHAR(25),
+email VARCHAR(80),
+password VARCHAR,
+user_type_id INTEGER,
+create_date TIMESTAMP,
+load_date TIMESTAMP
+);
+
+-- Creación del squema
+CREATE SCHEMA IF NOT EXISTS users;
+
+-- Creación de la tabla
+CREATE TABLE IF NOT EXISTS users.users (
+id SERIAL,
+user_id VARCHAR(70) PRIMARY KEY,
+user_type_id INTEGER,
+type_identification VARCHAR(10),
+first_name VARCHAR(150),
+last_name VARCHAR(150),
+birthday_date TIMESTAMP,
+identity_document VARCHAR(50),
+country_phone_code_id INTEGER,
+phone_number NUMERIC,
+email VARCHAR(255),
+confirm_email BOOLEAN DEFAULT FALSE,
+image_link TEXT,
+address JSON[],
+update_date TIMESTAMP,
+create_date TIMESTAMP
+);
