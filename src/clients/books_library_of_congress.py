@@ -1,5 +1,18 @@
+from datetime import datetime
+
 import requests
 
+from repositories.library import create_book_for_consult
+
+
+def convert_date(date_str):
+    if date_str is None:
+        return None
+    date_format = "%Y" if len(date_str) == 4 else "%B %Y"
+    try:
+        return datetime.strptime(date_str, date_format).date()
+    except ValueError:
+        return None
 
 def search_books_library_of_congress(search_term, result):
     url = f"https://www.loc.gov/books/?q={search_term}&fo=json"
@@ -9,20 +22,22 @@ def search_books_library_of_congress(search_term, result):
 
         books = data.get("results", [])
         response_data = []
-        for book in books:
+        for _ in range(10):
+            book = books[_]
             response_data.append(
                 {
                     "title": book.get("item", "")["title"],
                     "subtitle": book.get("subtitle", ""),
-                    "authors": book.get("item", "")["contributors"],
-                    "categories": book.get("partof", []),
-                    "editor": book.get("group", ""),
-                    "publication_date": book.get("dates", ""),
-                    "description": book.get("description", ""),
-                    "image": book.get("image_url", ""),
+                    "authors": book.get("item", "")["contributors"][0],
+                    "categories": book.get("partof", [])[0],
+                    "editor": book.get("group", "")[0],
+                    "publication_date": convert_date(str(book.get("date", ""))),
+                    "description": book.get("description", "")[0] if book.get("description") is not None else None,
+                    "image": book.get("image_url", "")[0],
                 }
             )
         data = {"source": "Library of Congress API", "data": response_data}
+        create_book_for_consult(response_data)
 
         result.put(data, block=True)
     else:

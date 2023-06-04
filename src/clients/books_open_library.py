@@ -1,4 +1,18 @@
+from datetime import datetime
+
 import requests
+
+from repositories.library import create_book_for_consult
+
+
+def convert_date(date_str):
+    if date_str is None:
+        return None
+    date_format = "%Y" if len(date_str) == 4 else "%B %Y"
+    try:
+        return datetime.strptime(date_str, date_format).date()
+    except ValueError:
+        return None
 
 
 def search_books_open_library(search_term, result):
@@ -8,17 +22,22 @@ def search_books_open_library(search_term, result):
         data = response.json()
 
         # Procesar los resultados del API de Google Books
-        books = data.get("results", [])
+        books = data.get("docs", [])
         response_data = []
-        for book in books:
+        for _ in range(10):
+            book = books[_]
             response_data.append(
                 {
                     "title": book.get("title", ""),
                     "subtitle": book.get("subtitle", ""),
-                    "authors": book.get("author_name", []),
-                    "categories": book.get("categories", []),
-                    "editor": book.get("publisher", ""),
-                    "publication_date": book.get("publish_date", "")[0],
+                    "authors": book.get("author_name", [])[0]
+                    if book.get("author_name") is not None
+                    else None,
+                    "categories": book.get("categories", ""),
+                    "editor": book.get("publisher", "")[0],
+                    "publication_date": convert_date(
+                        str(book.get("first_publish_year", ""))
+                    ),
                     "description": book.get("description", ""),
                     "image": book["imageLinks"].get("thumbnail", "")
                     if "imageLinks" in book
@@ -26,6 +45,7 @@ def search_books_open_library(search_term, result):
                 }
             )
         data = {"source": "Open Library API", "data": response_data}
+        create_book_for_consult(response_data)
 
         result.put(data, block=True)
 
