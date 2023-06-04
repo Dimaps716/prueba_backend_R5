@@ -16,7 +16,7 @@ class LibraryBase(BaseModel):
     categories: Optional[str] = Field(
         ...,
     )
-    publication_date: Union[date, None] = Field(default=date)
+    publication_date: Union[date, None] = Field(default_factory=date.today)
     editor: Optional[str] = Field(
         ...,
     )
