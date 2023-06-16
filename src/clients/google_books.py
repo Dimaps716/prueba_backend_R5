@@ -1,6 +1,8 @@
+import logging
 from datetime import datetime
 
 import requests
+from fastapi import HTTPException, status
 
 from repositories.library import create_book, create_book_for_consult
 
@@ -18,40 +20,46 @@ def convert_date(date_str):
 
 
 def search_books_in_google_api(search_term: str, result) -> list:
-    url = f"https://www.googleapis.com/books/v1/volumes?q={search_term}"
+    method = search_books_in_google_api.__name__
+    try:
+        url = f"https://www.googleapis.com/books/v1/volumes?q={search_term}"
 
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
 
-        # Procesar los resultados del API de Google Books
-        books = data.get("items", [])
+            # Procesar los resultados del API de Google Books
+            books = data.get("items", [])
 
-        response_data = []
-        for _ in range(10):
-            book = books[_].get("volumeInfo", {})
+            response_data = []
+            for _ in range(10):
+                book = books[_].get("volumeInfo", {})
 
-            response_data.append(
-                {
-                    "title": book.get("title", ""),
-                    "subtitle": book.get("subtitle", ""),
-                    "authors": book.get("authors", "")[0]
-                    if type(book.get("authors")) is list
-                    else book.get("authors", ""),
-                    "categories": book.get("categories", "")[0]
-                    if type(book.get("categories")) is list
-                    else book.get("categories", ""),
-                    "editor": book.get("publisher", ""),
-                    "publication_date": convert_date(book.get("publishedDate", "")),
-                    "description": book.get("description", ""),
-                    "image": book["imageLinks"].get("thumbnail", "")
-                    if "imageLinks" in book
-                    else "",
-                }
-            )
+                response_data.append(
+                    {
+                        "title": book.get("title", ""),
+                        "subtitle": book.get("subtitle", ""),
+                        "authors": book.get("authors", "")[0]
+                        if type(book.get("authors")) is list
+                        else book.get("authors", ""),
+                        "categories": book.get("categories", "")[0]
+                        if type(book.get("categories")) is list
+                        else book.get("categories", ""),
+                        "editor": book.get("publisher", ""),
+                        "publication_date": convert_date(book.get("publishedDate", "")),
+                        "description": book.get("description", ""),
+                        "image": book["imageLinks"].get("thumbnail", "")
+                        if "imageLinks" in book
+                        else "",
+                    }
+                )
 
-            data = {"source": "Google Books", "data": response_data}
-        create_book_for_consult(response_data)
-        result.put(data, block=True)
-    else:
-        result.put(response.status_code, block=True)
+                data = {"source": "Google Books", "data": response_data}
+            create_book_for_consult(response_data)
+            result.put(data, block=True)
+        else:
+            result.put(response.status_code, block=True)
+
+    except Exception as ex:
+        logging.error(f"Error when execute {method}: {ex}")
+        result.put({"Exception": ex})
