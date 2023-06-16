@@ -59,45 +59,51 @@ def get_books_db(search_term: str):
             return data
 
         else:
-            threads = []
-            result = queue.Queue()
-
-            google_books_thread = threading.Thread(
-                target=google_books.search_books_in_google_api,
-                args=(search_term, result),
-                daemon=True,
-            )
-            threads.append(google_books_thread)
-
-            open_library_thread = threading.Thread(
-                target=books_open_library.search_books_open_library,
-                args=(search_term, result),
-                daemon=True,
-            )
-            threads.append(open_library_thread)
-
-            library_of_congress_thread = threading.Thread(
-                target=books_library_of_congress.search_books_library_of_congress,
-                args=(search_term, result),
-                daemon=True,
-            )
-            threads.append(library_of_congress_thread)
-
-            value_data = []
-            for star in threads:
-                star.start()
-                value_data.append(result.get())
-                star.join(timeout=0.2)
-                result.task_done()
-
-            return value_data
-
+            return search_books(search_term)
     except Exception as ex:
         logging.error(f"{method}: {ex}")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"error {method}")
 
     finally:
         db.close()
+
+
+def search_books(search_term):
+    method = get_books_db.__name__
+    try:
+        result_queue = queue.Queue()
+
+        search_functions = [
+            google_books.search_books_in_google_api,
+            books_open_library.search_books_open_library,
+            books_library_of_congress.search_books_library_of_congress
+        ]
+
+        threads = [
+            threading.Thread(
+                target=search_function,
+                args=(search_term, result_queue),
+                daemon=True
+            )
+            for search_function in search_functions
+        ]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join(timeout=0.2)
+
+        value_data = []
+        while not result_queue.empty():
+            value_data.append(result_queue.get_nowait())
+
+        return value_data
+
+    except Exception as ex:
+        logging.error(f"{method}: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"error {method}")
+
 
 
 def single_book(
